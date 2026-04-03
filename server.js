@@ -1,49 +1,106 @@
+//BACK-END USANDO BANCO DE DADOS EM UM ARRAY E COM CRUD COMPLETO COM NODE.JS, usando o .find(), .findIndex() e o splice()
+
 import express from "express"
 
-const PORTA = 3000
-const app = express()
+const PORTA = 3001
 const data = new Date()
-let bancoDados = [
-    {
-        id:25,
-        nome: "jose"
-    }
-]
-let id = bancoDados.id + 1
+const app = express()
+let bancoDeDados = []
+let idInicial = 1
 
 app.use(express.json())
 
-//BUSCAR TODOS OS DADOS
-app.get("/api/v1/projects", (req, res) => {
+//CRIANDO DADOS COM .POST na rota /api/v1/projects
+app.post("/api/v1/projects", (req, res) => {
     try {
-        if (bancoDados.length > 0) {
-            res.status(200).json(bancoDados)
+        let id = idInicial++
+        let nome = req.body.nome
+        let descricao = req.body.descricao
+
+        if (nome && descricao) {
+
+            bancoDeDados.push({ id, nome, descricao })
+            res.status(201).json({ id, nome, descricao })
+
         } else {
-            res.status(404).json({ "informação": "O banco está vazio e não conten informaçãoes!" })
+            res.status(404).json({ "informação": "insira corretamente suas credenciais!" })
         }
-    } catch (erro) {
-        res.status(500).json(erro)
+    } catch (error) {
+        res.status(500).json({ "informação": "Houve um error inesperado!" })
     }
 })
 
-//BUSCAR DADOS POR ID 
+//BUSCANDO TODOS OS DADOS .GET() NA ROTA /api/v1/projects
+app.get("/api/v1/projects", (req, res) => {
+    try {
+
+        if (bancoDeDados.length > 0) {
+            res.json(bancoDeDados)
+        } else {
+            res.status(404).json({ "informação": "O banco de dados está vazio!" })
+        }
+
+    } catch (error) {
+        res.status(500).json({ "Informacao": "Houve um erro inesperado!" })
+    }
+})
+
+//BUSCANDO TODOS OS DADOS .GET() NA ROTA /api/v1/projects
 app.get("/api/v1/projects/:id", (req, res) => {
     try {
-        if (bancoDados.length > 0) {
-            
-            let id = parseInt(req.params.id)
-            const buscarDadosPorID = bancoDados.find(item => item.id === id)
+        let id = parseInt(req.params.id)
+        const buscarID = bancoDeDados.find(registro => registro.id === id)
 
-            if(buscarDadosPorID){
-                res.status(200).json(buscarDadosPorID)
-            }else{
-                res.status(200).json({"iformaçaõ": "ID não encontrado!"})
-            }
+        if (buscarID) {
+            res.json(buscarID)
         } else {
-            res.status(404).json({ "informação": "O banco está vazio e não conten informaçãoes!" })
+            res.status(404).json({ "informação": "ID não encontrado!" })
         }
-    } catch (erro) {
-        res.status(500).json(erro)
+
+    } catch (error) {
+        res.status(500).json({ "Informacao": "Houve um erro inesperado!" })
+    }
+})
+
+//ATULIZANDO ALGUNS CAMPOS OU TODOS OS CAMPOS COM PATCH NA ROTA /api/v1/projects/:id
+app.patch("/api/v1/projects/:id", (req, res) => {
+    try {
+
+        let id = parseInt(req.params.id)
+        let buscarID = bancoDeDados.find(registro => registro.id === id)
+
+        if (buscarID) {
+
+            buscarID.nome = req.body.nome
+            buscarID.descricao = req.body.descricao
+            res.status(202).json(req.body)
+
+        } else {
+            res.status(404).json({ "informação": "ID não encontrado!" })
+        }
+    } catch (error) {
+        res.status(500).json({ "Informação": error })
+    }
+})
+
+//DELETANDO POR ID NA ROTA /api/v1/projects/:id
+app.delete("/api/v1/projects/:id", (req, res) => {
+    try {
+
+        let id = parseInt(req.params.id)
+        let buscarID = bancoDeDados.findIndex(registro => registro.id === id)
+
+        if (buscarID !== -1) {
+
+            bancoDeDados.splice(buscarID, 1)
+            res.status(202).json(req.body)
+
+        } else {
+            res.status(404).json({ "informação": "ID não encontrado!" })
+        }
+
+    } catch (error) {
+        res.status(500).json({ "Informação": error })
     }
 })
 
